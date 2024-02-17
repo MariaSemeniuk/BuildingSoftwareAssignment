@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import yaml
 import requests
 import pandas as pd
+import logging
 
 """
 in __init__,  pass into the config the start and end of a range of pokemon numbers that we want to analyze
@@ -72,10 +73,14 @@ def get_poke_df(list_of_ids):
         poke_df = pd.DataFrame(poke_dicts)
     return poke_df
 
+
+
 class Analysis():
 
 
     def __init__(self, analysis_config: str) -> None:
+
+        logging.basicConfig(level=logging.INFO)
         CONFIG_PATHS = ['configs/system_config.yml', 'configs/user_config.yml']
         ''' Load config into an Analysis object
 
@@ -105,6 +110,9 @@ class Analysis():
 
         '''
 
+        if not analysis_config.endswith('.yml'):
+            logging.error('analysis_config path must be a path to a yml file')
+            raise ValueError('analysis_config path must be a path to a yml file')
 
         # add the analysis config to the list of paths to load
         paths = CONFIG_PATHS + [analysis_config]
@@ -118,7 +126,16 @@ class Analysis():
                 this_config = yaml.safe_load(f)
             config.update(this_config)
 
+        assert(config['ntfy_topic_name'])
+        assert(config['job_dir_path'])
+        assert(config['poke_id_start_of_range'] is not None)
+        assert(config['poke_id_end_of_range'])
+        assert(isinstance(config['poke_id_start_of_range'], int))
+        assert(isinstance(config['poke_id_end_of_range'], int))
+
         self.config = config
+
+        logging.info(f'CONFIG LOADED: {self.config}')
 
     def load_data(self) -> None:
         ''' Retrieve data from the GitHub API
@@ -173,4 +190,7 @@ class Analysis():
 
             '''
         pass
-    
+
+#Just for testing: 
+job1 = Analysis('/Users/mariasemeniuk/Documents/DSI-noGithubStuff/BuildingSoftwareAssignment/job1/configs/job_file.yml')
+#job1.load_data() #TODO
