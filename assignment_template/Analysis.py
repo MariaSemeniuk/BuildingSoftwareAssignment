@@ -2,7 +2,75 @@ from typing import Any, Optional
 import matplotlib.pyplot as plt
 import yaml
 import requests
+import pandas as pd
 
+"""
+in __init__,  pass into the config the start and end of a range of pokemon numbers that we want to analyze
+- it will save the config as self.config and not return anything
+
+we will use the get_poke_df as our load_data
+- instead of passing in the list, we will load the start and end numbers from the config
+- we will also use the get_poke_data function as a helper function, which just means that it doesn't get directly called by the end user
+- it will store the data to self.dataset
+
+in compute_analysis, we will calculate the mean, min, or max of self.dataset
+- we will need to put the calculation function in the config
+- it will call notify_done with a message that includes if we calculated min, mean, or max
+
+in notify_done, we will write to ntfy.sh
+""" 
+
+"""
+
+in get_data
+
+make sure you can load self.config
+make sure you can load the start and end variables out of self.config
+make sure you can create a range using the start and end variables
+make sure you add 1 to the end variable before creating the range so the last pokemon doesnt get delete
+call get_poke_data like in get_poke_df
+save the df to self.dataset
+"""
+"""
+for unit testing
+
+test get_poke_data with a single id and make sure it returns the data you want
+test get_poke_df with a list of ids and make sure the dataframe has the correct shape
+test compute_analysis by calling get_poke_df with a list of ids and returning the mean of the output dataframe, and make sure that it matches what you'd expect
+"""
+def get_poke_dict(id):
+    url = f"https://pokeapi.co/api/v2/pokemon/{id}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        r_json = response.json()
+        poke_dict = {}
+        keys = ['base_experience', 'height', 'id', 'species', 'types', 'weight']
+        for key in keys:
+            if key == 'species':
+                poke_dict[key] = r_json[key]['name']
+                
+            elif key == 'types':
+                for poke_type in r_json[key]:
+                    if poke_type ['slot'] == 1:
+                        poke_dict['type1'] = poke_type['type']['name']
+                    else:
+                        poke_dict['type2'] = poke_type['type']['name']                
+            else:
+                poke_dict[key] = r_json[key]
+
+        return poke_dict
+    else:
+        return None
+
+def get_poke_df(list_of_ids):
+    poke_dicts = []
+    for id in list_of_ids:
+        new_poke_dict = get_poke_dict(id)
+        if new_poke_dict is not None:
+            poke_dicts.append(new_poke_dict)
+        poke_df = pd.DataFrame(poke_dicts)
+    return poke_df
 
 class Analysis():
 
@@ -67,10 +135,12 @@ class Analysis():
             None
 
             '''
+        data = requests.get('/url/to/data').json()
+        self.dataset = data
         print(self.config['figure_title'])
 
     def compute_analysis(self) -> Any:
-        '''Analyze previously-loaded data.
+        ''' Analyze previously-loaded data.
 
             This function runs an analytical measure of your choice (mean, median, linear regression, etc...)
             and returns the data in a format of your choice.
@@ -84,27 +154,8 @@ class Analysis():
             analysis_output : Any
 
             '''
-        pass
+        return self.dataset.mean() 
 
-
-        #Optional
-    def plot_data(self, save_path: Optional[str] = None) -> plt.Figure:
-        ''' Analyze and plot data
-
-            Generates a plot, display it to screen, and save it to the path in the parameter `save_path`, or 
-            the path from the configuration file if not specified.
-
-            Parameters
-            ----------
-            save_path : str, optional
-                Save path for the generated figure
-
-            Returns
-            -------
-            fig : matplotlib.Figure
-
-            '''
-        pass
 
     def notify_done(self, message: str) -> None:
         ''' Notify the user that analysis is complete.
