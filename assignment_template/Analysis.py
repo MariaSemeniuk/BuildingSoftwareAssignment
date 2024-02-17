@@ -4,12 +4,94 @@ import yaml
 import requests
 import numpy as np
 import pandas as pd
+import logging
+
+"""
+in compute_analysis, we will calculate the mean, min, or max of self.dataset
+- we will need to put the calculation function in the config
+- it will call notify_done with a message that includes if we calculated min, mean, or max
+
+in notify_done, we will write to ntfy.sh
+
+for unit testing
+
+test get_poke_data with a single id and make sure it returns the data you want
+test get_poke_df with a list of ids and make sure the dataframe has the correct shape
+test compute_analysis by calling get_poke_df with a list of ids and returning the mean of the output dataframe, and make sure that it matches what you'd expect
+"""
+def get_poke_dict(id):
+    url = f"https://pokeapi.co/api/v2/pokemon/{id}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        r_json = response.json()
+        poke_dict = {}
+        keys = ['base_experience', 'height', 'id', 'species', 'types', 'weight']
+        for key in keys:
+            if key == 'species':
+                poke_dict[key] = r_json[key]['name']
+                
+            elif key == 'types':
+                for poke_type in r_json[key]:
+                    if poke_type ['slot'] == 1:
+                        poke_dict['type1'] = poke_type['type']['name']
+                    else:
+                        poke_dict['type2'] = poke_type['type']['name']                
+            else:
+                poke_dict[key] = r_json[key]
+
+        return poke_dict
+    else:
+        return None
+
+def get_poke_df(list_of_ids):
+    poke_dicts = []
+    for id in list_of_ids:
+        new_poke_dict = get_poke_dict(id)
+        if new_poke_dict is not None:
+            poke_dicts.append(new_poke_dict)
+        poke_df = pd.DataFrame(poke_dicts)
+    return poke_df
 
 
 class Analysis():
 
+
     def __init__(self, analysis_config: str) -> None:
+
+        logging.basicConfig(level=logging.INFO)
         CONFIG_PATHS = ['configs/system_config.yml', 'configs/user_config.yml']
+        ''' Load config into an Analysis object
+
+        Load system-wide configuration from `configs/system_config.yml`, user configuration from
+        `configs/user_config.yml`, and the specified analysis configuration file
+
+        Parameters
+        ----------
+        analysis_config : str
+            Path to the analysis/job-specific configuration file
+
+        Returns
+        -------
+        analysis_obj : Analysis
+            Analysis object containing consolidated parameters from the configuration files
+
+        Notes
+        -----
+        The configuration files should include parameters for:
+            * GitHub API token
+            * ntfy.sh topic
+            * Plot color
+            * Plot title
+            * Plot x and y axis titles
+            * Figure size
+            * Default save path
+
+        '''
+
+        if not analysis_config.endswith('.yml'):
+            logging.error('analysis_config path must be a path to a yml file')
+            raise ValueError('analysis_config path must be a path to a yml file')
 
         # add the analysis config to the list of paths to load
         paths = CONFIG_PATHS + [analysis_config]
@@ -23,10 +105,44 @@ class Analysis():
                 this_config = yaml.safe_load(f)
             config.update(this_config)
 
+        assert(config['ntfy_topic_name'])
+        assert(config['job_dir_path'])
+        assert(config['poke_id_start_of_range'] is not None)
+        assert(config['poke_id_end_of_range'])
+        assert(isinstance(config['poke_id_start_of_range'], int))
+        assert(isinstance(config['poke_id_end_of_range'], int))
+        assert(config['poke_id_start_of_range'] > 0)
+
+
+
         self.config = config
 
+        logging.info(f'CONFIG LOADED: {self.config}')
+
     def load_data(self) -> None:
-        print(self.config['figure_title'])
+        ''' Retrieve data from the GitHub API
+
+            This function makes an HTTPS request to the Pokemon API and retrieves your selected data. The data is
+            stored in the Analysis object.
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            None
+
+            '''
+        
+        #we load the start and end pokemon ID numbers from the config
+        #add 1 to the end variable (poke_id_end_of_range) before creating the range so the last pokemon doesnt get delete
+        list_of_ids = range(self.config['poke_id_start_of_range'], self.config['poke_id_end_of_range'] + 1) #load data
+        poke_df = get_poke_df(list_of_ids)
+        logging.info(f'loaded data: \n{poke_df}')
+
+        self.dataset = poke_df
+        # print(self.config['figure_title'])
 
     def compute_analysis(self) -> dict:
         '''Analyze previously-loaded data.
@@ -50,8 +166,6 @@ class Analysis():
                 "median": np.median(self.dataset["base_experience"]),
                 }
 
-    def plot_data(self, save_path: Optional[str] = None) -> plt.Figure:
-        pass
 
     def notify_done(self, message: str) -> None:
         ''' Notify the user that analysis is complete.
@@ -76,4 +190,8 @@ class Analysis():
             'https://ntfy.sh/' + topic,
             data=message.encode('utf-8'),
         )
-    
+
+#Just for testing: 
+job1 = Analysis('/Users/mariasemeniuk/Documents/DSI-noGithubStuff/BuildingSoftwareAssignment/job1/configs/job_file.yml')
+job1.load_data() 
+
