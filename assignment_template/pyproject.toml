@@ -3,16 +3,17 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = ""
+name = "building_software_assignment"
 authors = [
-    {name = "", email = ""},
+    {name = "Meryl Fang", "Maria Semeniuk", email = "...", "maria.semeniuk@mail.utoronto.ca},
 ]
-description = ""
+description = "Building Software Assignment"
 version = "0.1.0"
-dependencies = [""]
+dependencies = ["matplotlib", "numpy", "yaml", "requests", "logging"]
 requires-python = ">=3.11.0"
 readme = "README.md"
 classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
+[project.scripts]
