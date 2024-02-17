@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import yaml
 import requests
 import numpy as np
+import pandas as pd
 
 
 class Analysis():
@@ -27,10 +28,10 @@ class Analysis():
     def load_data(self) -> None:
         print(self.config['figure_title'])
 
-    def compute_analysis(self) -> Any:
+    def compute_analysis(self) -> dict:
         '''Analyze previously-loaded data.
 
-        This function compute the mean of pokemons' base experience 
+        This function compute several statistics of pokemons' base_experience 
 
         Parameters
         ----------
@@ -38,10 +39,16 @@ class Analysis():
 
         Returns
         -------
-        analysis_output : Float
+        analysis_output : Dictionary that contains min, max, mean, median of
+        the pokemons' base_experience
 
         '''
-        return np.mean(self.dataset["base_experience"])
+        
+        return {"min": np.min(self.dataset["base_experience"]),
+                "max": np.max(self.dataset["base_experience"]),
+                "mean": np.mean(self.dataset["base_experience"]),
+                "median": np.median(self.dataset["base_experience"]),
+                }
 
     def plot_data(self, save_path: Optional[str] = None) -> plt.Figure:
         pass
