@@ -18,44 +18,8 @@ test get_poke_data with a single id and make sure it returns the data you want
 test get_poke_df with a list of ids and make sure the dataframe has the correct shape
 test compute_analysis by calling get_poke_df with a list of ids and returning the mean of the output dataframe, and make sure that it matches what you'd expect
 """
-def get_poke_dict(id):
-    url = f"https://pokeapi.co/api/v2/pokemon/{id}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        r_json = response.json()
-        poke_dict = {}
-        keys = ['base_experience', 'height', 'id', 'species', 'types', 'weight']
-        for key in keys:
-            if key == 'species':
-                poke_dict[key] = r_json[key]['name']
-                
-            elif key == 'types':
-                for poke_type in r_json[key]:
-                    if poke_type ['slot'] == 1:
-                        poke_dict['type1'] = poke_type['type']['name']
-                    else:
-                        poke_dict['type2'] = poke_type['type']['name']                
-            else:
-                poke_dict[key] = r_json[key]
-
-        return poke_dict
-    else:
-        return None
-
-def get_poke_df(list_of_ids):
-    poke_dicts = []
-    for id in list_of_ids:
-        new_poke_dict = get_poke_dict(id)
-        if new_poke_dict is not None:
-            poke_dicts.append(new_poke_dict)
-        poke_df = pd.DataFrame(poke_dicts)
-    return poke_df
-
-
 
 class Analysis():
-
 
     def __init__(self, analysis_config: str) -> None:
 
@@ -118,6 +82,40 @@ class Analysis():
         self.config = config
 
         logging.info(f'CONFIG LOADED: {self.config}')
+    
+    def get_poke_dict(self, id) -> dict | None:
+        url = f"https://pokeapi.co/api/v2/pokemon/{id}"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            r_json = response.json()
+            poke_dict = {}
+            keys = ['base_experience', 'height', 'id', 'species', 'types', 'weight']
+            for key in keys:
+                if key == 'species':
+                    poke_dict[key] = r_json[key]['name']
+                    
+                elif key == 'types':
+                    for poke_type in r_json[key]:
+                        if poke_type ['slot'] == 1:
+                            poke_dict['type1'] = poke_type['type']['name']
+                        else:
+                            poke_dict['type2'] = poke_type['type']['name']                
+                else:
+                    poke_dict[key] = r_json[key]
+
+            return poke_dict
+        else:
+            return None
+
+    def get_poke_df(self, list_of_ids) -> pd.DataFrame:
+        poke_dicts = []
+        for id in list_of_ids:
+            new_poke_dict = self.get_poke_dict(id)
+            if new_poke_dict is not None:
+                poke_dicts.append(new_poke_dict)
+            poke_df = pd.DataFrame(poke_dicts)
+        return poke_df
 
     def load_data(self) -> None:
         ''' Retrieve data from the GitHub API
@@ -138,7 +136,7 @@ class Analysis():
         #we load the start and end pokemon ID numbers from the config
         #add 1 to the end variable (poke_id_end_of_range) before creating the range so the last pokemon doesnt get delete
         list_of_ids = range(self.config['poke_id_start_of_range'], self.config['poke_id_end_of_range'] + 1) #load data
-        poke_df = get_poke_df(list_of_ids)
+        poke_df = self.get_poke_df(list_of_ids)
         logging.info(f'loaded data: \n{poke_df}')
 
         self.dataset = poke_df
