@@ -6,33 +6,12 @@ import pandas as pd
 import logging
 
 """
-in __init__,  pass into the config the start and end of a range of pokemon numbers that we want to analyze
-- it will save the config as self.config and not return anything
-
-we will use the get_poke_df as our load_data
-- instead of passing in the list, we will load the start and end numbers from the config
-- we will also use the get_poke_data function as a helper function, which just means that it doesn't get directly called by the end user
-- it will store the data to self.dataset
-
 in compute_analysis, we will calculate the mean, min, or max of self.dataset
 - we will need to put the calculation function in the config
 - it will call notify_done with a message that includes if we calculated min, mean, or max
 
 in notify_done, we will write to ntfy.sh
-""" 
 
-"""
-
-in get_data
-
-make sure you can load self.config
-make sure you can load the start and end variables out of self.config
-make sure you can create a range using the start and end variables
-make sure you add 1 to the end variable before creating the range so the last pokemon doesnt get delete
-call get_poke_data like in get_poke_df
-save the df to self.dataset
-"""
-"""
 for unit testing
 
 test get_poke_data with a single id and make sure it returns the data you want
@@ -132,6 +111,9 @@ class Analysis():
         assert(config['poke_id_end_of_range'])
         assert(isinstance(config['poke_id_start_of_range'], int))
         assert(isinstance(config['poke_id_end_of_range'], int))
+        assert(config['poke_id_start_of_range'] > 0)
+
+
 
         self.config = config
 
@@ -140,7 +122,7 @@ class Analysis():
     def load_data(self) -> None:
         ''' Retrieve data from the GitHub API
 
-            This function makes an HTTPS request to the GitHub API and retrieves your selected data. The data is
+            This function makes an HTTPS request to the Pokemon API and retrieves your selected data. The data is
             stored in the Analysis object.
 
             Parameters
@@ -152,9 +134,15 @@ class Analysis():
             None
 
             '''
-        data = requests.get('/url/to/data').json()
-        self.dataset = data
-        print(self.config['figure_title'])
+        
+        #we load the start and end pokemon ID numbers from the config
+        #add 1 to the end variable (poke_id_end_of_range) before creating the range so the last pokemon doesnt get delete
+        list_of_ids = range(self.config['poke_id_start_of_range'], self.config['poke_id_end_of_range'] + 1) #load data
+        poke_df = get_poke_df(list_of_ids)
+        logging.info(f'loaded data: \n{poke_df}')
+
+        self.dataset = poke_df
+        # print(self.config['figure_title'])
 
     def compute_analysis(self) -> Any:
         ''' Analyze previously-loaded data.
@@ -193,4 +181,4 @@ class Analysis():
 
 #Just for testing: 
 job1 = Analysis('/Users/mariasemeniuk/Documents/DSI-noGithubStuff/BuildingSoftwareAssignment/job1/configs/job_file.yml')
-#job1.load_data() #TODO
+job1.load_data() 
