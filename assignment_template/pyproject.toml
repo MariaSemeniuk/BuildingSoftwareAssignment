@@ -5,11 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "building_software_assignment"
 authors = [
-    {name = "Meryl Fang", "Maria Semeniuk", email = "...", "maria.semeniuk@mail.utoronto.ca},
+    {name = "Maria Semeniuk", email = "maria.semeniuk@mail.utoronto.ca"},
 ]
 description = "Building Software Assignment"
 version = "0.1.0"
-dependencies = ["matplotlib", "numpy", "yaml", "requests", "logging"]
+dependencies = ["typing", "pandas", "yaml", "requests", "logging"]
 requires-python = ">=3.11.0"
 readme = "README.md"
 classifiers = [

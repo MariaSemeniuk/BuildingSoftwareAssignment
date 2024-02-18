@@ -3,3 +3,6 @@ assignment_template/configs/system_config.yml
 assignment_template/.DS_Store
 assignment_template/.DS_Store
 assignment_template/configs/user_config.yml
+.DS_Store
+assignment_template/__pycache__/Analysis.cpython-311.pyc
+assignment_template/__pycache__/test_Analysis.cpython-311-pytest-8.0.0.pyc
