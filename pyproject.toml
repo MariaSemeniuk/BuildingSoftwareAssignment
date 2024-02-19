@@ -9,11 +9,12 @@ authors = [
 ]
 description = "Building Software Assignment"
 version = "0.1.0"
-dependencies = ["typing", "pandas", "yaml", "requests", "logging"]
+dependencies = ["typing", "pandas", "pyyaml", "requests"]
 requires-python = ">=3.11.0"
 readme = "README.md"
 classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
-[project.scripts]
+[tool.hatch.build.targets.wheel]
+      packages = ["BuildingSoftwareAssignment"]
